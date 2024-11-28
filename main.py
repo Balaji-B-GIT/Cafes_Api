@@ -124,7 +124,7 @@ def get_cafe_at_location():
 #         }
 #         return jsonify(error = not_found)
 
-app.route('/add',methods=['POST'])
+@app.route('/add',methods=['POST'])
 def add_cafe():
     new_cafe = Cafe(
         name=request.form.get("name"),
@@ -142,7 +142,32 @@ def add_cafe():
     db.session.commit()
     return jsonify(response={"success": "Successfully added the new cafe."})
 
+@app.route("/update-price/<cafe_id>",methods=["PATCH"])
+def patch_price(cafe_id):
+    new_price = request.args.get("new_price")
+    query_cafe = Cafe.query.get(cafe_id)
+    if query_cafe:
+        query_cafe.coffee_price = new_price
+        db.session.commit()
+        return jsonify(response={"success": "Successfully Updated Coffee Price."}), 200
+    else:
+        return jsonify(error={"Not Found": "Sorry a cafe with that id was not found in the database."}), 404
 
+
+
+@app.route("/report-closed/<cafe_id>",methods=["DELETE","POST","GET"])
+def delete(cafe_id):
+    query_cafe = Cafe.query.get(cafe_id)
+    api_key = request.args.get("api-key")
+    if api_key == "TopSecretApiKey":
+        if query_cafe:
+            db.session.delete(query_cafe)
+            db.session.commit()
+            return jsonify(response={"success": "Successfully Deleted Cafe."}), 200
+        else:
+            return jsonify(error={"Not Found": "Sorry a cafe with that id was not found in the database."}), 404
+    else:
+        return jsonify(error={"Forbidden": "Sorry, that's not allowed. Make sure you have the correct api_key."}), 403
 
 # HTTP GET - Read Record
 
